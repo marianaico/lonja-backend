@@ -1,31 +1,23 @@
-const Compra = require('../models/Compra');
+const Reporte = require('../models/Reporte');
 
-exports.diario = async (req, res, next) => {
+// Consultar reportes diarios
+exports.diario = async (req, res) => {
   try {
-    const { fecha } = req.query;
-    if (!fecha) return res.status(400).json({ message: 'fecha requerida (YYYY-MM-DD)' });
-    const inicio = new Date(`${fecha}T00:00:00.000Z`);
-    const fin = new Date(`${fecha}T23:59:59.999Z`);
+    const reportes = await Reporte.find();
+    res.json(reportes);
+  } catch (err) {
+    res.status(500).json({ message: "Error al obtener reportes" });
+  }
+};
 
-    const data = await Compra.aggregate([
-      { $match: { fecha: { $gte: inicio, $lte: fin } } },
-      { $lookup: { from: 'compradors', localField: 'comprador', foreignField: '_id', as: 'comprador' } },
-      { $unwind: '$comprador' },
-      { $lookup: { from: 'especies', localField: 'especie', foreignField: '_id', as: 'especie' } },
-      { $unwind: '$especie' },
-      { $group: {
-        _id: { comprador: '$comprador.codigoCmp', especie: '$especie.nombre' },
-        totalMonto: { $sum: '$precioTotal' },
-        compras: { $sum: 1 }
-      }},
-      { $group: {
-        _id: '$_id.comprador',
-        detalle: { $push: { especie: '$_id.especie', totalMonto: '$totalMonto', compras: '$compras' } },
-        totalComprador: { $sum: '$totalMonto' }
-      }},
-      { $sort: { _id: 1 } }
-    ]);
-
-    res.json({ fecha, data });
-  } catch (e) { next(e); }
+// Crear reporte diario
+exports.crearDiario = async (req, res) => {
+  try {
+    const { fecha, ventas, compras } = req.body;
+    const nuevoReporte = new Reporte({ fecha, ventas, compras });
+    await nuevoReporte.save();
+    res.status(201).json({ message: "Reporte guardado correctamente" });
+  } catch (err) {
+    res.status(500).json({ message: "Error al guardar reporte" });
+  }
 };
