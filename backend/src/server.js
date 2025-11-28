@@ -1,15 +1,21 @@
-require('dotenv').config();
-const { connectDB } = require('./config/db');
-const app = require('./app');
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const authRoutes = require("./routes/auth");
 
-const port = process.env.PORT || 8080;
+const app = express();
+app.use(express.json());
 
-(async () => {
-  try {
-    await connectDB();
-    app.listen(port, () => console.log(`Servidor conectado en puerto ${port}`));
-  } catch (e) {
-    console.error('Error al iniciar servidor:', e);
-    process.exit(1);
-  }
-})();
+// Conexión a MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log("Conectado a MongoDB"))
+  .catch(err => console.error("Error de conexión:", err));
+
+// Rutas
+app.use("/api/auth", authRoutes);
+
+// Puerto
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
