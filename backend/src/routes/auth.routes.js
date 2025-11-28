@@ -27,4 +27,41 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// LOGIN
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Buscar usuario
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Credenciales inválidas" });
+    }
+
+    // Comparar contraseña
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Credenciales inválidas" });
+    }
+
+    // Crear JWT
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.json({
+      message: "Login exitoso",
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    console.error("🔥 ERROR LOGIN:", err);
+    res.status(500).json({ message: "Error en el servidor" });
+  }
+});
+
+
 module.exports = router;
