@@ -7,7 +7,7 @@ const UserSchema = new Schema({
   role: { type: String, enum: ['admin', 'user'], default: 'user' }
 }, { timestamps: true });
 
-// Middleware para encriptar contraseña antes de guardar
+
 UserSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 
@@ -15,7 +15,7 @@ UserSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Método para comparar contraseñas
+
 UserSchema.methods.comparePassword = function (plainPassword) {
   return bcrypt.compare(plainPassword, this.password);
 };
