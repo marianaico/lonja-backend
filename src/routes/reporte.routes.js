@@ -1,10 +1,10 @@
 const router = require("express").Router();
+const auth = require("../middleware/auth");
 const ctrl = require("../controllers/reporte.controller");
 
-// SIN AUTENTICACIÓN PARA PRUEBA
-router.post("/diarios/add", ctrl.crearDiario);
-router.get("/diario", ctrl.diario);
-router.get("/semanal", ctrl.semanal);
+router.get("/diario", auth(), ctrl.diario);
+router.post("/diarios/add", auth(), ctrl.crearDiario);
 
 module.exports = router;
+
 
