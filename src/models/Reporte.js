@@ -1,17 +1,18 @@
 const mongoose = require("mongoose");
 
 const VentaSchema = new mongoose.Schema({
-  producto: String,
-  precio: Number
+  nombre: { type: String, required: true },
+  precio: { type: Number, required: true }
 });
 
 const ReporteSchema = new mongoose.Schema({
   fecha: { type: Date, required: true },
-  ventas: [VentaSchema],
-  total: { type: Number, required: true }
+  ventas: { type: [VentaSchema], required: true }, // 👈 AQUÍ VA "ventas"
+  total: { type: Number, required: true }          // 👈 AQUÍ VA "total"
 });
 
 module.exports = mongoose.model("Reporte", ReporteSchema);
+
 
 
 
