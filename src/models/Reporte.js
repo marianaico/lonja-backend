@@ -7,11 +7,12 @@ const VentaSchema = new mongoose.Schema({
 
 const ReporteSchema = new mongoose.Schema({
   fecha: { type: Date, required: true },
-  ventas: { type: [VentaSchema], required: true }, // 👈 AQUÍ VA "ventas"
-  total: { type: Number, required: true }          // 👈 AQUÍ VA "total"
+  ventas: { type: [VentaSchema], required: true },
+  total: { type: Number, required: true }
 });
 
 module.exports = mongoose.model("Reporte", ReporteSchema);
+
 
 
 
