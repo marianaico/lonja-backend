@@ -11,9 +11,9 @@ exports.diario = async (req, res) => {
 
 exports.crearDiario = async (req, res) => {
   try {
-    const { fecha, ventas, compras } = req.body;
+    const { fecha, ventas } = req.body;
 
-    if (!fecha || !ventas || !compras) {
+    if (!fecha || !ventas || ventas.length === 0) {
       return res.status(400).json({ message: "Datos incompletos" });
     }
 
@@ -22,14 +22,13 @@ exports.crearDiario = async (req, res) => {
 
     const existe = await Reporte.findOne({ fecha });
     if (existe) {
-      return res.status(400).json({ message: "Ya existe reporte para esta fecha" });
+      return res.status(400).json({ message: "Ya existe un reporte para esta fecha" });
     }
 
     const nuevo = new Reporte({
       fecha,
       ventas,
-      totalVentas,
-      compras
+      totalVentas
     });
 
     await nuevo.save();
@@ -40,5 +39,27 @@ exports.crearDiario = async (req, res) => {
     res.status(500).json({ message: "Error al guardar reporte" });
   }
 };
+
+exports.reporteMensual = async (req, res) => {
+  const { anio, mes } = req.params;
+
+  const inicio = new Date(anio, mes - 1, 1);
+  const fin = new Date(anio, mes, 0, 23, 59, 59);
+
+  try {
+    const reportes = await Reporte.find({
+      fecha: { $gte: inicio, $lte: fin }
+    });
+
+    let totalMes = 0;
+    reportes.forEach(r => totalMes += r.totalVentas);
+
+    res.json({ reportes, totalMes });
+
+  } catch (err) {
+    res.status(500).json({ message: "Error al generar reporte mensual" });
+  }
+};
+
 
 
