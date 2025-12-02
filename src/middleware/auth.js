@@ -1,21 +1,23 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-function auth(roles = []) {
+module.exports = (role = null) => {
   return (req, res, next) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Acceso denegado" });
+
     try {
-      const hdr = req.headers.authorization || '';
-      const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
-      if (!token) return res.status(401).json({ message: 'No autorizado' });
-      const payload = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = payload;
-      if (roles.length && !roles.includes(payload.role)) {
-        return res.status(403).json({ message: 'Prohibido' });
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+
+      if (role && decoded.role !== role) {
+        return res.status(403).json({ message: "No autorizado" });
       }
+
       next();
-    } catch (e) {
-      res.status(401).json({ message: 'Token inválido' });
+    } catch (err) {
+      res.status(401).json({ message: "Token inválido" });
     }
   };
-}
+};
 
-module.exports = auth;
+

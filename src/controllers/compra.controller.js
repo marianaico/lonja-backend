@@ -1,52 +1,56 @@
-const Compra = require('../models/Compra');
+const Compra = require("../models/Compra");
 
-exports.list = async (req, res, next) => {
+exports.crearCompra = async (req, res) => {
   try {
-    const { fecha, comprador, tipo, especie, page = 1, limit = 20 } = req.query;
-    const filter = {};
-    if (fecha) {
-      const start = new Date(`${fecha}T00:00:00.000Z`);
-      const end = new Date(`${fecha}T23:59:59.999Z`);
-      filter.fecha = { $gte: start, $lte: end };
-    }
-    if (comprador) filter.comprador = comprador;
-    if (tipo) filter.tipo = tipo;
-    if (especie) filter.especie = especie;
+    const { productos } = req.body;
 
-    const data = await Compra.find(filter)
-      .populate('comprador especie tipo lote')
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
+    if (!productos || productos.length === 0) {
+      return res.status(400).json({ message: "No hay productos" });
+    }
+
+    let total = 0;
+    productos.forEach(p => {
+      total += p.precio * (p.cantidad || 1);
+    });
+
+    const nuevaCompra = new Compra({
+      usuario: req.user.id,
+      productos,
+      total
+    });
+
+    await nuevaCompra.save();
+    res.status(201).json(nuevaCompra);
+
+  } catch (error) {
+    res.status(500).json({ message: "Error al guardar compra" });
+  }
+};
+
+
+exports.misCompras = async (req, res) => {
+  try {
+    const compras = await Compra.find({ usuario: req.user.id })
       .sort({ fecha: -1 });
 
-    res.json(data);
-  } catch (e) { next(e); }
+    res.json(compras);
+
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener compras" });
+  }
 };
 
-exports.get = async (req, res, next) => {
+
+exports.todas = async (req, res) => {
   try {
-    const d = await Compra.findById(req.params.id).populate('comprador especie tipo lote');
-    if (!d) return res.status(404).json({ message: 'No encontrado' });
-    res.json(d);
-  } catch (e) { next(e); }
+    const compras = await Compra.find()
+      .populate("usuario", "nombre email")
+      .sort({ fecha: -1 });
+
+    res.json(compras);
+
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener compras" });
+  }
 };
 
-exports.create = async (req, res, next) => {
-  try { res.status(201).json(await Compra.create(req.body)); } catch (e) { next(e); }
-};
-
-exports.update = async (req, res, next) => {
-  try {
-    const d = await Compra.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!d) return res.status(404).json({ message: 'No encontrado' });
-    res.json(d);
-  } catch (e) { next(e); }
-};
-
-exports.remove = async (req, res, next) => {
-  try {
-    const r = await Compra.findByIdAndDelete(req.params.id);
-    if (!r) return res.status(404).json({ message: 'No encontrado' });
-    res.json({ ok: true });
-  } catch (e) { next(e); }
-};
