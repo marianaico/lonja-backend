@@ -11,10 +11,12 @@ const app = express();
 app.use(cors({
   origin: [
     "https://lonja-frontend.onrender.com",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://localhost:5174"
   ],
   credentials: true
 }));
+
 
 app.use(express.json());
 
