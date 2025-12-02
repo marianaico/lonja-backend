@@ -1,14 +1,6 @@
-const Reporte = require('../models/Reporte');
+const Reporte = require("../models/Reporte");
 
-exports.diario = async (req, res) => {
-  try {
-    const reportes = await Reporte.find().sort({ fecha: -1 });
-    res.json(reportes);
-  } catch (err) {
-    res.status(500).json({ message: "Error al obtener reportes" });
-  }
-};
-
+// Guardar reporte diario
 exports.crearDiario = async (req, res) => {
   try {
     const { fecha, ventas } = req.body;
@@ -17,47 +9,52 @@ exports.crearDiario = async (req, res) => {
       return res.status(400).json({ message: "Datos incompletos" });
     }
 
-    let totalVentas = 0;
-    ventas.forEach(v => totalVentas += v.subtotal);
-
-    const existe = await Reporte.findOne({ fecha });
-    if (existe) {
-      return res.status(400).json({ message: "Ya existe un reporte para esta fecha" });
-    }
+    let total = 0;
+    ventas.forEach(v => total += v.precio);
 
     const nuevo = new Reporte({
       fecha,
       ventas,
-      totalVentas
+      total
     });
 
     await nuevo.save();
     res.status(201).json(nuevo);
 
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
     res.status(500).json({ message: "Error al guardar reporte" });
   }
 };
 
-exports.reporteMensual = async (req, res) => {
-  const { anio, mes } = req.params;
+// Obtener todos los reportes
+exports.diario = async (req, res) => {
+  try {
+    const reportes = await Reporte.find().sort({ fecha: -1 });
+    res.json(reportes);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener reportes" });
+  }
+};
 
-  const inicio = new Date(anio, mes - 1, 1);
-  const fin = new Date(anio, mes, 0, 23, 59, 59);
+// Reporte semanal
+exports.semanal = async (req, res) => {
+  const { inicio, fin } = req.query;
 
   try {
     const reportes = await Reporte.find({
-      fecha: { $gte: inicio, $lte: fin }
+      fecha: {
+        $gte: new Date(inicio),
+        $lte: new Date(fin)
+      }
     });
 
-    let totalMes = 0;
-    reportes.forEach(r => totalMes += r.totalVentas);
+    let totalSemana = 0;
+    reportes.forEach(r => totalSemana += r.total);
 
-    res.json({ reportes, totalMes });
+    res.json({ reportes, totalSemana });
 
-  } catch (err) {
-    res.status(500).json({ message: "Error al generar reporte mensual" });
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener reporte semanal" });
   }
 };
 

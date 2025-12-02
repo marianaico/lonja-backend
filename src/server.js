@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const authRoutes = require("./routes/auth.routes");
-const reporteRoutes = require("./routes/reporte.routes"); // ✅ IMPORTANTE
+const reporteRoutes = require("./routes/reporte.routes");
 
 const app = express();
 
@@ -18,16 +18,14 @@ app.use(cors({
 
 app.use(express.json());
 
-// CONEXIÓN A MONGODB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("Conectado a MongoDB"))
-  .catch(err => console.error("Error de conexión:", err));
+  .catch(err => console.error(err));
 
-// RUTAS
 app.use("/api/auth", authRoutes);
-app.use("/api/reportes", reporteRoutes); // ✅ AQUÍ ESTABA EL ERROR
+app.use("/api/reportes", reporteRoutes);
 
-// PUERTO
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log("Servidor activo"));
+
 
